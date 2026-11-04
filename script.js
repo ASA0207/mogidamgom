@@ -10,6 +10,28 @@ const gate = $('#gate');
 const toast = $('#toast');
 let toastTimer;
 let audioEnabled = false;
+const bgMusic = $('#bgMusic');
+const musicBtn = $('#soundBtn');
+const musicVolume = $('#musicVolume');
+bgMusic.volume = 0.22;
+function updateMusicButton(){
+  const playing = !bgMusic.paused;
+  musicBtn.textContent = playing ? '❚❚' : '♫';
+  musicBtn.setAttribute('aria-pressed',String(playing));
+  musicBtn.setAttribute('aria-label',playing ? '배경음악 일시정지' : '배경음악 재생');
+  musicBtn.title = playing ? 'SMILEY 일시정지' : 'SMILEY 재생';
+}
+async function playMusic(){
+  try { await bgMusic.play(); updateMusicButton(); }
+  catch { updateMusicButton(); notify('음악을 재생할 수 없어요. 브라우저 설정이나 MP3 파일을 확인해 주세요.'); }
+}
+musicVolume.addEventListener('input',()=>{
+  bgMusic.volume=Number(musicVolume.value)/100;
+  musicVolume.title=`배경음악 음량 ${musicVolume.value}%`;
+});
+bgMusic.addEventListener('play',updateMusicButton);
+bgMusic.addEventListener('pause',updateMusicButton);
+bgMusic.addEventListener('error',()=>notify('음악 파일을 불러오지 못했어요.'));
 let audioContext;
 const safeRandom = (min,max) => min+Math.random()*(max-min);
 
@@ -55,15 +77,14 @@ function enter(){
   sparkle(35);
   $('#enterBtn').blur();
 }
-$('#enterBtn').addEventListener('click',enter);
+$('#enterBtn').addEventListener('click',()=>{enter();playMusic();});
+$('#quietEnterBtn').addEventListener('click',()=>{enter();bgMusic.pause();});
 if(sessionStorage.getItem('mogidamgom-entered')==='true'){
   gate.classList.add('hidden');gate.setAttribute('aria-hidden','true');document.body.classList.remove('gate-active');
 }
-$('#soundBtn').addEventListener('click',()=>{
-  audioEnabled=!audioEnabled;
-  $('#soundBtn').setAttribute('aria-pressed',String(audioEnabled));
-  $('#soundBtn').setAttribute('aria-label',audioEnabled?'효과음 끄기':'효과음 켜기');
-  notify(audioEnabled?'별빛 효과음이 켜졌어요 ♪':'효과음이 꺼졌어요');tone(660);
+musicBtn.addEventListener('click',()=>{
+  if(bgMusic.paused) playMusic();
+  else bgMusic.pause();
 });
 $('#themeBtn').addEventListener('click',()=>{
   document.body.classList.toggle('light-mode');
@@ -160,3 +181,13 @@ $('#secretClose').addEventListener('click',closeSecret);
 $('.secret-backdrop').addEventListener('click',closeSecret);
 // 장식용 별 클릭 시 작은 반응
 $('.brand-icon').addEventListener('click',()=>tone(740));
+
+// Character card surprises: uses the original four user-provided images.
+document.querySelectorAll('.character-tile').forEach(tile=>{
+  tile.addEventListener('click',()=>{
+    notify(tile.dataset.bear);
+    tone(740,.12);
+    sparkle(18);
+    tile.animate([{transform:'translateY(0) rotate(0)'},{transform:'translateY(-14px) rotate(-4deg)'},{transform:'translateY(0) rotate(0)'}],{duration:560,easing:'ease-out'});
+  });
+});

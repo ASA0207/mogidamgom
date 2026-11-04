@@ -46,3 +46,10 @@ body{background:#161327}
 .character-poster img{border-radius:14px;max-height:204px;object-fit:contain}
 @media(max-width:900px){.character-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.join-bear{opacity:.24}}
 @media(max-width:540px){.character-grid{gap:10px}.character-tile{min-height:260px;padding:13px 8px}.character-tile img{height:155px}.character-tile strong{font-size:16px}.character-tile small{font-size:10px}.character-emoji{font-size:8px}.gate-mascot{height:160px}.hero-bear{width:305px}.join-bear{right:-60px}}
+
+/* 시작 화면: 직접 음량을 조절할 수 있는 음악 컨트롤 */
+.gate-audio-options{display:flex;align-items:center;justify-content:center;gap:13px;margin:18px auto 0;color:#e7dcf6;font-size:12px}
+.gate-audio-options input{width:145px;accent-color:#f7d69b;cursor:pointer}
+.gate-tip{line-height:1.85}
+.gate-tip small{font-size:10px;color:#a3a9bd}
+@media(max-width:540px){.gate-audio-options{margin-top:12px}.gate-audio-options input{width:128px}}

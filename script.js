@@ -13,7 +13,10 @@ let audioEnabled = false;
 const bgMusic = $('#bgMusic');
 const musicBtn = $('#soundBtn');
 const musicVolume = $('#musicVolume');
-bgMusic.volume = 0.22;
+const DEFAULT_VOLUME = 0.18; // 배경음악 기본 음량 18%
+bgMusic.volume = DEFAULT_VOLUME;
+musicVolume.value = String(Math.round(DEFAULT_VOLUME*100));
+let musicRequested = false;
 function updateMusicButton(){
   const playing = !bgMusic.paused;
   musicBtn.textContent = playing ? '❚❚' : '♫';
@@ -21,13 +24,22 @@ function updateMusicButton(){
   musicBtn.setAttribute('aria-label',playing ? '배경음악 일시정지' : '배경음악 재생');
   musicBtn.title = playing ? 'SMILEY 일시정지' : 'SMILEY 재생';
 }
-async function playMusic(){
+async function playMusic({silentFailure=false}={}){
+  musicRequested = true;
   try { await bgMusic.play(); updateMusicButton(); }
-  catch { updateMusicButton(); notify('음악을 재생할 수 없어요. 브라우저 설정이나 MP3 파일을 확인해 주세요.'); }
+  catch {
+    updateMusicButton();
+    if(!silentFailure) notify('브라우저가 음악 재생을 막았어요. 음악 버튼을 다시 눌러주세요.');
+  }
 }
+// 허용하는 브라우저에서는 방문 즉시 재생하고, 막히면 입장 클릭으로 시작합니다.
+playMusic({silentFailure:true});
+
 musicVolume.addEventListener('input',()=>{
   bgMusic.volume=Number(musicVolume.value)/100;
   musicVolume.title=`배경음악 음량 ${musicVolume.value}%`;
+  const gateVolume = $('#gateVolume');
+  if(gateVolume) gateVolume.value = musicVolume.value;
 });
 bgMusic.addEventListener('play',updateMusicButton);
 bgMusic.addEventListener('pause',updateMusicButton);
@@ -72,19 +84,26 @@ function enter(){
   if(gate.classList.contains('hidden'))return;
   gate.classList.add('hidden');gate.setAttribute('aria-hidden','true');
   document.body.classList.remove('gate-active');
-  sessionStorage.setItem('mogidamgom-entered','true');
+  // 입장 기록을 저장하지 않아 항상 시작 화면을 볼 수 있습니다.
   tone(620);setTimeout(()=>tone(880),120);
   sparkle(35);
   $('#enterBtn').blur();
 }
-$('#enterBtn').addEventListener('click',()=>{enter();playMusic();});
-$('#quietEnterBtn').addEventListener('click',()=>{enter();bgMusic.pause();});
-if(sessionStorage.getItem('mogidamgom-entered')==='true'){
-  gate.classList.add('hidden');gate.setAttribute('aria-hidden','true');document.body.classList.remove('gate-active');
+$('#enterBtn').addEventListener('click',()=>{playMusic();enter();});
+$('#quietEnterBtn').addEventListener('click',()=>{musicRequested=false;bgMusic.pause();enter();});
+// 시작 화면은 새로고침/재방문 시에도 항상 표시합니다.
+const gateVolume = $('#gateVolume');
+if (gateVolume) {
+  gateVolume.value = musicVolume.value;
+  gateVolume.addEventListener('input', () => {
+    musicVolume.value = gateVolume.value;
+    musicVolume.dispatchEvent(new Event('input'));
+  });
 }
+
 musicBtn.addEventListener('click',()=>{
   if(bgMusic.paused) playMusic();
-  else bgMusic.pause();
+  else {musicRequested=false; bgMusic.pause();}
 });
 $('#themeBtn').addEventListener('click',()=>{
   document.body.classList.toggle('light-mode');

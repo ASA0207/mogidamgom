@@ -32,8 +32,9 @@ async function playMusic({silentFailure=false}={}){
     if(!silentFailure) notify('브라우저가 음악 재생을 막았어요. 음악 버튼을 다시 눌러주세요.');
   }
 }
-// 허용하는 브라우저에서는 방문 즉시 재생하고, 막히면 입장 클릭으로 시작합니다.
-playMusic({silentFailure:true});
+// 시작 화면에서는 절대 자동 재생하지 않습니다.
+// 사용자가 「음악과 함께 입장」을 클릭할 때만 재생을 시작합니다.
+bgMusic.pause();
 
 musicVolume.addEventListener('input',()=>{
   bgMusic.volume=Number(musicVolume.value)/100;
